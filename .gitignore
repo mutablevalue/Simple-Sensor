@@ -1,3 +1,7 @@
+.cache/
+*.cache
+clangd
+index
 build/
 *.elf
 *.hex
