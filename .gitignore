@@ -1,5 +1,6 @@
 .cache/
 *.cache
+.cache/clangd
 clangd
 index
 build/
