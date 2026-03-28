@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME}.elf
     src/entry.cpp
     src/sensor/sensor.cpp
     src/sensor/timer.cpp
+    src/core.cpp
+    src/communication/uart.cpp
 )
 
 target_compile_options(${PROJECT_NAME}.elf PRIVATE ${COMMON_FLAGS})

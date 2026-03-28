@@ -1,13 +1,8 @@
-#include "sensor/sensor.h"
+#include "core.cpp"
 
 int main() {
-  Sensor sensor;
-
-  sensor.init();
-
-  while (true) {
-    sensor.read_distance();
-  }
-
+  Core System;
+  System.init();
+  System.run_service();
   return 0;
 }
