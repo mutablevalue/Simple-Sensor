@@ -89,11 +89,11 @@ sudo dnf install cmake avr-gcc avr-gcc-c++ avr-libc avr-binutils avrdude
 │   ├── communication
 │   │   ├── uart.cpp
 │   │   └── uart.h
-│   ├── sensor
-│   │   ├── sensor.cpp
-│   │   ├── sensor.h
-│   │   ├── timer.cpp
-│   │   └── timer.h
+│   └── sensor
+│       ├── sensor.cpp
+│       ├── sensor.h
+│       ├── timer.cpp
+│       └── timer.h
 
 ---
 
