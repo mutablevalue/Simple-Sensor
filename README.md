@@ -70,6 +70,7 @@ sudo apt install cmake gcc-avr g++-avr avr-libc binutils-avr avrdude
 
 ## Project Structure
 
+```text
 .
 ├── CMakeLists.txt
 ├── src
@@ -78,12 +79,13 @@ sudo apt install cmake gcc-avr g++-avr avr-libc binutils-avr avrdude
 │   ├── communication
 │   │   ├── uart.cpp
 │   │   └── uart.h
-│   ├── sensor
-│   │   ├── sensor.cpp
-│   │   ├── sensor.h
-│   │   ├── timer.cpp
-│   │   └── timer.h
+│   └── sensor
+│       ├── sensor.cpp
+│       ├── sensor.h
+│       ├── timer.cpp
+│       └── timer.h
 └── README.md
+```
 
 ---
 
