@@ -1,15 +1,23 @@
 # Simple-Sensor
 
-A simple AVR C++ ultrasonic distance sensor project for the Arduino Uno using the HC-SR04 and three LEDs to indicate distance ranges.
+An AVR C++ ultrasonic distance sensor project for the Arduino Uno using the HC-SR04, three LEDs for distance indication, and UART communication to send data to a PC.
+
+---
+
+## Overview
+
+This project measures distance using an HC-SR04 ultrasonic sensor and:
+- Uses Timer1 for precise timing
+- Drives LEDs to indicate distance ranges
+- Sends distance data over UART → USB → PC
 
 ---
 
 ## Hardware
 
 ### Board
-- Arduino Uno
-- MCU: ATmega328P
-- Clock: 16 MHz
+- Arduino Uno (ATmega328P)
+- 16 MHz clock
 
 ### Sensor
 - HC-SR04 ultrasonic sensor
@@ -19,147 +27,138 @@ A simple AVR C++ ultrasonic distance sensor project for the Arduino Uno using th
 ## Pin Configuration
 
 ### HC-SR04
-- **VCC** → 5V  
-- **GND** → GND  
-- **TRIG** → PB0 (Arduino D8)  
-- **ECHO** → PB1 (Arduino D9)  
+- VCC → 5V
+- GND → GND
+- TRIG → PB0 (D8)
+- ECHO → PB1 (D9)
 
-### LEDs
-Configured in `sensor.h`:
-- **Close LED** → `led_close`
-- **Mid LED** → `led_mid`
-- **Far LED** → `led_far`
+### UART (Hardware Serial)
+- TX → PD1 (D1)
+- RX → PD0 (D0)
+
+UART appears on PC as:
+- /dev/ttyACM0
+
+---
+
+## Features
+
+- Accurate distance measurement using Timer1
+- LED-based distance indication
+- UART serial output to PC
+- CMake-based AVR build system
+
+---
+
+## UART Configuration
+
+- Baud: 9600
+- Format: 8N1 (8 data bits, no parity, 1 stop bit)
+
+At 16 MHz:
+UBRR = 103
+
+---
+
+## Example Output
+
+Distance: 24 cm
+Distance: 23 cm
+Distance: 25 cm
 
 ---
 
 ## Requirements
 
-Install required tools:
-
-```bash
+### Debian / Ubuntu
 sudo apt update
 sudo apt install cmake gcc-avr g++-avr avr-libc binutils-avr avrdude
-```
+
+### Fedora
+sudo dnf install cmake avr-gcc avr-gcc-c++ avr-libc avr-binutils avrdude
 
 ---
 
 ## Project Structure
 
-```
 .
 ├── CMakeLists.txt
 ├── src
 │   ├── entry.cpp
+│   ├── core.cpp
+│   ├── communication
+│   │   ├── uart.cpp
+│   │   └── uart.h
 │   ├── sensor
 │   │   ├── sensor.cpp
-│   │   └── sensor.h
-│   └── timer
-│       ├── timer.cpp
-│       └── timer.h
-└── README.md
-```
+│   │   ├── sensor.h
+│   │   ├── timer.cpp
+│   │   └── timer.h
 
 ---
 
 ## Build
 
-```bash
-cmake -S . -B build
-cmake --build build
-```
-
-Output:
-- `build/SimpleSensor.elf`
-- `build/SimpleSensor.hex`
+cd build
+cmake ..
+make
 
 ---
 
 ## Flash
 
-```bash
-cmake --build build --target flash
-```
+make flash
 
-If you get permission errors:
+If port is busy:
+pkill screen
+fuser -k /dev/ttyACM0
 
-```bash
-sudo usermod -aG dialout $USER
-```
+---
 
-Then log out and back in.
+## Read UART Data
+
+screen /dev/ttyACM0 9600
+
+Exit:
+Ctrl-A → K → y
+
+---
+
+## Program Flow
+
+core.init()
+core.run_service()
+
+Loop:
+- Read sensor
+- Get distance
+- Send over UART
+- Delay
+- Repeat
+
+---
+
+## Example UART Usage
+
+CommunicationSystem.write_string("Distance: ");
+CommunicationSystem.write_uint32(distance);
+CommunicationSystem.write_line(" cm");
 
 ---
 
 ## Timer Details
 
-This project uses Timer1 for precise echo measurement.
-
-- Mode: Normal
+Timer1:
 - Prescaler: 8
-- Timer frequency: 2 MHz
-- Resolution: 0.5 µs per tick
+- Frequency: 2 MHz
+- Resolution: 0.5 µs
 
-Distance conversion:
-
-```
 distance_cm = ticks / 116
-```
 
 ---
 
-## Example CMakeLists.txt
+## Notes
 
-```cmake
-cmake_minimum_required(VERSION 3.16)
-
-project(SimpleSensor C CXX)
-
-set(MCU atmega328p)
-set(AVRDUDE_MCU m328p)
-set(F_CPU 16000000UL)
-
-set(CMAKE_SYSTEM_NAME Generic)
-
-set(CMAKE_C_COMPILER /usr/bin/avr-gcc)
-set(CMAKE_CXX_COMPILER /usr/bin/avr-g++)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-set(COMMON_FLAGS
-    -mmcu=${MCU}
-    -DF_CPU=${F_CPU}
-    -Os
-    -fno-exceptions
-    -fno-rtti
-)
-
-add_executable(${PROJECT_NAME}.elf
-    src/entry.cpp
-    src/sensor/sensor.cpp
-    src/timer/timer.cpp
-)
-
-target_compile_options(${PROJECT_NAME}.elf PRIVATE ${COMMON_FLAGS})
-target_link_options(${PROJECT_NAME}.elf PRIVATE -mmcu=${MCU})
-
-target_include_directories(${PROJECT_NAME}.elf PRIVATE
-    src
-    src/sensor
-    src/timer
-)
-
-add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-    COMMAND avr-objcopy -O ihex -R .eeprom
-            ${PROJECT_NAME}.elf
-            ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex
-)
-
-add_custom_target(flash
-    COMMAND avrdude -c arduino -p ${AVRDUDE_MCU} -P /dev/ttyACM0 -b 115200
-            -U flash:w:${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex:i
-    DEPENDS ${PROJECT_NAME}.elf
-)
-```
+- UART initializes on first use
+- Always send newline (\r\n)
+- Only one process can use /dev/ttyACM0 at a time
